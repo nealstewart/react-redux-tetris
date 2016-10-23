@@ -1,0 +1,17 @@
+{
+	"parserOptions": {
+		"ecmaVersion": 6,
+		"experimentalObjectRestSpread": true,
+		"ecmaFeatures": {
+			"jsx": true
+		}
+	},
+	"env": {
+		"browser": true
+	},
+	"extends": "airbnb",
+	"rules": {
+		"no-tabs": 0,
+		"space-before-function-paren": 0
+	}
+}
