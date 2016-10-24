@@ -6,31 +6,13 @@ import { connect, Provider } from 'react-redux';
 import thunk from 'redux-thunk';
 import states from './src/states';
 import * as actions from './src/actions';
-import blockShape from './src/shapes/block';
-import Block from './src/components/block';
 import reducer from './src/reducer';
+import { TetrisBoardContainer } from './src/components/tetris_board';
 
 const store = createStore(
   reducer,
   applyMiddleware(thunk)
 );
-
-function TetrisBoard(props) {
-  const blocks = _.map(props.blocks, block => <Block key={block.key} block={block} />);
-  return (
-    <div className="tetris-board">
-      {blocks}
-    </div>
-  );
-}
-
-TetrisBoard.propTypes = {
-  blocks: PropTypes.arrayOf(blockShape).isRequired,
-};
-
-const TetrisBoardContainer = connect(
-  state => ({ blocks: state.liveBlocks.concat(state.deadBlocks) })
-)(TetrisBoard);
 
 function Score(props) {
   return <div>{props.score}</div>;
