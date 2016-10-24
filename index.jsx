@@ -6,38 +6,14 @@ import { connect, Provider } from 'react-redux';
 import thunk from 'redux-thunk';
 import states from './src/states';
 import * as actions from './src/actions';
-import colours from './src/colours';
+import blockShape from './src/shapes/block';
+import Block from './src/components/block';
 import reducer from './src/reducer';
-
-const BLOCK_SIZE = 20;
 
 const store = createStore(
   reducer,
   applyMiddleware(thunk)
 );
-
-const BLOCK_SHAPE = PropTypes.shape({
-  location: {
-    x: PropTypes.number.isRequired,
-    y: PropTypes.number.isRequired,
-  },
-  key: PropTypes.string.isRequired,
-  colour: PropTypes.oneOf(_.values(colours)),
-});
-
-function Block(props) {
-  const block = props.block;
-  const style = {
-    left: BLOCK_SIZE * block.location.x,
-    top: BLOCK_SIZE * block.location.y,
-    backgroundColor: block.colour,
-  };
-  return <div className="block" style={style} />;
-}
-
-Block.propTypes = {
-  block: BLOCK_SHAPE.isRequired,
-};
 
 function TetrisBoard(props) {
   const blocks = _.map(props.blocks, block => <Block key={block.key} block={block} />);
@@ -49,7 +25,7 @@ function TetrisBoard(props) {
 }
 
 TetrisBoard.propTypes = {
-  blocks: PropTypes.arrayOf(BLOCK_SHAPE).isRequired,
+  blocks: PropTypes.arrayOf(blockShape).isRequired,
 };
 
 const TetrisBoardContainer = connect(
