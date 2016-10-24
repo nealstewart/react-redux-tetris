@@ -7,24 +7,12 @@ import thunk from 'redux-thunk';
 import states from './src/states';
 import * as actions from './src/actions';
 import reducer from './src/reducer';
-import { TetrisBoardContainer } from './src/components/tetris_board';
+import { GameScreenContainer } from './src/components/game_screen';
 
 const store = createStore(
   reducer,
   applyMiddleware(thunk)
 );
-
-function Score(props) {
-  return <div>{props.score}</div>;
-}
-
-Score.propTypes = {
-  score: PropTypes.number.isRequired,
-};
-
-const ScoreContainer = connect(
-  state => ({ score: state.score })
-)(Score);
 
 function StartScreen(props) {
   return (
@@ -43,52 +31,6 @@ const StartScreenContainer = connect(
   null,
   dispatch => ({ onStartClick: () => dispatch(actions.startGame()) })
 )(StartScreen);
-
-class Ticker extends React.Component {
-  componentDidMount() {
-    const myTick = () => {
-      this.props.tick();
-      setTimeout(myTick, 1000);
-    };
-    this.timeout = setTimeout(myTick, 1000);
-  }
-
-  componentWillUnmount() {
-    clearTimeout(this.timeout);
-  }
-
-  render() {
-    return <div />;
-  }
-}
-
-Ticker.propTypes = {
-  tick: PropTypes.func.isRequired,
-};
-
-const TickerContainer = connect(
-  null,
-  dispatch => ({ tick: () => dispatch(actions.tick()) })
-)(Ticker);
-
-function GameScreen() {
-  return (
-    <div className={'game-screen'}>
-      <header>Game Screen</header>
-      <ScoreContainer />
-      <TetrisBoardContainer />
-      <TickerContainer />
-    </div>
-  );
-}
-
-GameScreen.propTypes = {
-  state: PropTypes.oneOf(_.values(states)).isRequired,
-};
-
-const GameScreenContainer = connect(
-  state => ({ state: state.state })
-)(GameScreen);
 
 function Root(props) {
   return (
