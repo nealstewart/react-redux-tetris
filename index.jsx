@@ -1,8 +1,9 @@
 import * as _ from 'lodash';
 import React, { PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-import { createStore } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
 import { connect, Provider } from 'react-redux';
+import thunk from 'redux-thunk';
 
 const BOARD_SIZE = {
   x: 10,
@@ -50,7 +51,7 @@ function moveToMiddle(shape) {
       ...p,
       location: {
         ...p.location,
-        x: (p.location.x + BOARD_SIZE.x) / 2,
+        x: Math.floor((p.location.x + BOARD_SIZE.x) / 2),
       },
     }
   ));
@@ -71,6 +72,17 @@ function createInitialState() {
   };
 }
 
+function moveDown(location) {
+  return { ...location, y: location.y + 1 };
+}
+
+function reduceTick(state) {
+  const liveBlocks = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
+  return {
+    ...state, liveBlocks,
+  };
+}
+
 function reduce(state, action) {
   if (typeof state === 'undefined') {
     return createInitialState();
@@ -79,6 +91,9 @@ function reduce(state, action) {
   switch (action.type) {
     case 'START_GAME':
       return { ...state, state: STATES.PLAYING };
+    case 'TICK':
+      console.log('hihihi');
+      return reduceTick(state);
     default:
   }
 
@@ -91,8 +106,17 @@ function startGame() {
   };
 }
 
+function tick() {
+  return {
+    type: 'TICK',
+  };
+}
 
-const store = createStore(reduce);
+
+const store = createStore(
+  reduce,
+  applyMiddleware(thunk)
+);
 
 const BLOCK_SHAPE = PropTypes.shape({
   location: {
@@ -164,12 +188,41 @@ const StartScreenContainer = connect(
   dispatch => ({ onStartClick: () => dispatch(startGame()) })
 )(StartScreen);
 
+class Ticker extends React.Component {
+
+  componentDidMount() {
+    const myTick = () => {
+      this.props.tick();
+      setTimeout(myTick, 1000);
+    };
+    this.timeout = setTimeout(myTick, 1000);
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this.timeout);
+  }
+
+  render() {
+    return <div />;
+  }
+}
+
+Ticker.propTypes = {
+  tick: PropTypes.func.isRequired,
+};
+
+const TickerContainer = connect(
+  null,
+  dispatch => ({ tick: () => dispatch(tick()) })
+)(Ticker);
+
 function GameScreen() {
   return (
     <div className={'game-screen'}>
       <header>Game Screen</header>
       <ScoreContainer />
       <TetrisBoardContainer />
+      <TickerContainer />
     </div>
   );
 }
