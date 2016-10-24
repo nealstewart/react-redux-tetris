@@ -4,118 +4,15 @@ import ReactDOM from 'react-dom';
 import { createStore, applyMiddleware } from 'redux';
 import { connect, Provider } from 'react-redux';
 import thunk from 'redux-thunk';
-
-const BOARD_SIZE = {
-  x: 10,
-  y: 22,
-};
-
-const VISIBLE_BOARD_SIZE = {
-  x: 10,
-  y: 20,
-};
-
-const STATES = {
-  IDLE: 'idle',
-  PLAYING: 'playing',
-  PAUSED: 'paused',
-  GAMEOVER: 'gameover',
-};
+import states from './src/states';
+import * as actions from './src/actions';
+import colours from './src/colours';
+import reducer from './src/reducer';
 
 const BLOCK_SIZE = 20;
 
-const COLOURS = {
-  WHITE: 'white',
-  BLUE: 'blue',
-  LIGHTBLUE: 'lightblue',
-};
-
-const SHAPES = {
-  I: [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 1, y: 3 }],
-  T: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 0, y: 2 }],
-};
-
-function createShape(shapeType, blockCount) {
-  return _.map(SHAPES[shapeType.name].slice(),
-    (location, i) => ({
-      location,
-      colour: shapeType.colour,
-      key: `block-${blockCount + i}`,
-    })
-  );
-}
-
-function moveToMiddle(shape) {
-  const xMove = Math.floor((BOARD_SIZE.x) / 2);
-  return _.map(shape, p => (
-    {
-      ...p,
-      location: {
-        ...p.location,
-        x: xMove + p.location.x,
-      },
-    }
-  ));
-}
-
-function createInitialState() {
-  const liveBlocks = moveToMiddle(createShape({
-    name: 'I',
-    colour: COLOURS.LIGHTBLUE,
-  }, 0));
-
-  return {
-    state: STATES.IDLE,
-    liveBlocks,
-    blockCount: liveBlocks.length,
-    score: 0,
-    deadBlocks: [],
-  };
-}
-
-function moveDown(location) {
-  return { ...location, y: location.y + 1 };
-}
-
-function reduceTick(state) {
-  const liveBlocks = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
-  return {
-    ...state, liveBlocks,
-  };
-}
-
-function reduce(state, action) {
-  if (typeof state === 'undefined') {
-    return createInitialState();
-  }
-
-  switch (action.type) {
-    case 'START_GAME':
-      return { ...state, state: STATES.PLAYING };
-    case 'TICK':
-      console.log('hihihi');
-      return reduceTick(state);
-    default:
-  }
-
-  return state;
-}
-
-function startGame() {
-  return {
-    type: 'START_GAME',
-  };
-}
-
-function tick() {
-  return {
-    type: 'TICK',
-  };
-}
-
-
 const store = createStore(
-  reduce,
+  reducer,
   applyMiddleware(thunk)
 );
 
@@ -125,7 +22,7 @@ const BLOCK_SHAPE = PropTypes.shape({
     y: PropTypes.number.isRequired,
   },
   key: PropTypes.string.isRequired,
-  colour: PropTypes.oneOf(_.values(COLOURS)),
+  colour: PropTypes.oneOf(_.values(colours)),
 });
 
 function Block(props) {
@@ -186,7 +83,7 @@ StartScreen.propTypes = {
 
 const StartScreenContainer = connect(
   null,
-  dispatch => ({ onStartClick: () => dispatch(startGame()) })
+  dispatch => ({ onStartClick: () => dispatch(actions.startGame()) })
 )(StartScreen);
 
 class Ticker extends React.Component {
@@ -213,7 +110,7 @@ Ticker.propTypes = {
 
 const TickerContainer = connect(
   null,
-  dispatch => ({ tick: () => dispatch(tick()) })
+  dispatch => ({ tick: () => dispatch(actions.tick()) })
 )(Ticker);
 
 function GameScreen() {
@@ -228,7 +125,7 @@ function GameScreen() {
 }
 
 GameScreen.propTypes = {
-  state: PropTypes.oneOf(_.values(STATES)).isRequired,
+  state: PropTypes.oneOf(_.values(states)).isRequired,
 };
 
 const GameScreenContainer = connect(
@@ -238,14 +135,14 @@ const GameScreenContainer = connect(
 function Root(props) {
   return (
     <div>
-      {props.state === STATES.IDLE && <StartScreenContainer />}
-      {props.state === STATES.PLAYING && <GameScreenContainer />}
+      {props.state === states.IDLE && <StartScreenContainer />}
+      {props.state === states.PLAYING && <GameScreenContainer />}
     </div>
   );
 }
 
 Root.propTypes = {
-  state: PropTypes.oneOf(_.values(STATES)).isRequired,
+  state: PropTypes.oneOf(_.values(states)).isRequired,
 };
 
 const RootContainer = connect(
