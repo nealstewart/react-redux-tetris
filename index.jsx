@@ -46,12 +46,13 @@ function createShape(shapeType, blockCount) {
 }
 
 function moveToMiddle(shape) {
+  const xMove = Math.floor((BOARD_SIZE.x) / 2);
   return _.map(shape, p => (
     {
       ...p,
       location: {
         ...p.location,
-        x: Math.floor((p.location.x + BOARD_SIZE.x) / 2),
+        x: xMove + p.location.x,
       },
     }
   ));
@@ -154,6 +155,10 @@ TetrisBoard.propTypes = {
   blocks: PropTypes.arrayOf(BLOCK_SHAPE).isRequired,
 };
 
+const TetrisBoardContainer = connect(
+  state => ({ blocks: state.liveBlocks.concat(state.deadBlocks) })
+)(TetrisBoard);
+
 function Score(props) {
   return <div>{props.score}</div>;
 }
@@ -165,10 +170,6 @@ Score.propTypes = {
 const ScoreContainer = connect(
   state => ({ score: state.score })
 )(Score);
-
-const TetrisBoardContainer = connect(
-  state => ({ blocks: state.liveBlocks.concat(state.deadBlocks) })
-)(TetrisBoard);
 
 function StartScreen(props) {
   return (
@@ -189,7 +190,6 @@ const StartScreenContainer = connect(
 )(StartScreen);
 
 class Ticker extends React.Component {
-
   componentDidMount() {
     const myTick = () => {
       this.props.tick();
