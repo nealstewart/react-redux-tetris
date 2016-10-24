@@ -14,6 +14,13 @@ const VISIBLE_BOARD_SIZE = {
   y: 20,
 };
 
+const STATES = {
+  IDLE: 'idle',
+  PLAYING: 'playing',
+  PAUSED: 'paused',
+  GAMEOVER: 'gameover',
+};
+
 const BLOCK_SIZE = 20;
 
 const COLOURS = {
@@ -56,6 +63,7 @@ function createInitialState() {
   }, 0));
 
   return {
+    state: STATES.IDLE,
     liveBlocks,
     blockCount: liveBlocks.length,
     score: 0,
@@ -68,8 +76,21 @@ function reduce(state, action) {
     return createInitialState();
   }
 
+  switch (action.type) {
+    case 'START_GAME':
+      return { ...state, state: STATES.PLAYING };
+    default:
+  }
+
   return state;
 }
+
+function startGame() {
+  return {
+    type: 'START_GAME',
+  };
+}
+
 
 const store = createStore(reduce);
 
@@ -125,12 +146,62 @@ const TetrisBoardContainer = connect(
   state => ({ blocks: state.liveBlocks.concat(state.deadBlocks) })
 )(TetrisBoard);
 
-ReactDOM.render(
-  <Provider store={store}>
-    <div>
+function StartScreen(props) {
+  return (
+    <div className={'start-screen'}>
+      <header>Start Screen</header>
+      <button onClick={props.onStartClick}>Start Game</button>
+    </div>
+  );
+}
+
+StartScreen.propTypes = {
+  onStartClick: PropTypes.func.isRequired,
+};
+
+const StartScreenContainer = connect(
+  null,
+  dispatch => ({ onStartClick: () => dispatch(startGame()) })
+)(StartScreen);
+
+function GameScreen() {
+  return (
+    <div className={'game-screen'}>
+      <header>Game Screen</header>
       <ScoreContainer />
       <TetrisBoardContainer />
     </div>
+  );
+}
+
+GameScreen.propTypes = {
+  state: PropTypes.oneOf(_.values(STATES)).isRequired,
+};
+
+const GameScreenContainer = connect(
+  state => ({ state: state.state })
+)(GameScreen);
+
+function Root(props) {
+  return (
+    <div>
+      {props.state === STATES.IDLE && <StartScreenContainer />}
+      {props.state === STATES.PLAYING && <GameScreenContainer />}
+    </div>
+  );
+}
+
+Root.propTypes = {
+  state: PropTypes.oneOf(_.values(STATES)).isRequired,
+};
+
+const RootContainer = connect(
+  state => ({ state: state.state })
+)(Root);
+
+ReactDOM.render(
+  <Provider store={store}>
+    <RootContainer />
   </Provider>,
   document.getElementById('root')
 );
