@@ -31,7 +31,7 @@ function subtract(num) {
 }
 
 function add(num) {
-  return num === VISIBLE_BOARD_SIZE.x ? num : num + 1;
+  return num < VISIBLE_BOARD_SIZE.x - 1 ? num + 1 : num;
 }
 
 function equalLocations(a, b) {
@@ -66,10 +66,22 @@ function blockAtBottom(blocks) {
   return blocks.some(b => b.location.y + 1 === VISIBLE_BOARD_SIZE.y);
 }
 
+function clearLines(blocks) {
+  const lineGroupedBlocks = _.map(_.groupBy(blocks, b => b.location.y), (lineBlocks, height) => ({ lineBlocks, height }));
+
+  const fullLines = _.filter(lineGroupedBlocks, ({ lineBlocks }) => lineBlocks.length === VISIBLE_BOARD_SIZE.x);
+
+  return blocks;
+}
+
 function tick(state) {
   const blocksDown = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
 
   if (blockAtBottom(state.liveBlocks) || blockInTheWay(blocksDown, state.deadBlocks)) {
+    const newDeadBlocks = state.deadBlocks.concat(state.liveBlocks);
+
+    const {clearedBlocks, points} = clearLines(newDeadBlocks);
+
     const newBlocks = createShape({
       name: 'I',
       colour: colours.BLUE,
@@ -78,7 +90,7 @@ function tick(state) {
     return {
       ...state,
       liveBlocks: newBlocks,
-      deadBlocks: state.deadBlocks.concat(state.liveBlocks),
+      deadBlocks: newDeadBlocks,
       blockCount: state.blockCount + newBlocks.length,
     };
   }
@@ -128,14 +140,15 @@ export default function(state, action) {
   }
 
   switch (action.type) {
+    case 'TICK':
+      return tick(state);
     case 'MOVE_LEFT':
       return { ...state, liveBlocks: moveLeft(state.liveBlocks, state.deadBlocks) };
     case 'MOVE_RIGHT':
       return { ...state, liveBlocks: moveRight(state.liveBlocks, state.deadBlocks) };
     case 'START_GAME':
       return { ...state, state: states.PLAYING };
-    case 'TICK':
-      return tick(state);
+
     default:
   }
 
