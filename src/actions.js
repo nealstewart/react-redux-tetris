@@ -9,3 +9,27 @@ export function tick() {
     type: 'TICK',
   };
 }
+
+export function moveLeft() {
+  return {
+    type: 'MOVE_LEFT',
+  };
+}
+
+export function moveRight() {
+  return {
+    type: 'MOVE_RIGHT',
+  };
+}
+
+export function drop() {
+  return {
+    type: 'DROP',
+  };
+}
+
+export function rotate() {
+  return {
+    type: 'ROTATE',
+  };
+}

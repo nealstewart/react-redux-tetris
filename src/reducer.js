@@ -26,6 +26,22 @@ function moveDown(location) {
   return { ...location, y: location.y + 1 };
 }
 
+function subtract(num) {
+  return num === 0 ? num : num - 1;
+}
+
+function add(num) {
+  return num === VISIBLE_BOARD_SIZE.x ? num : num + 1;
+}
+
+function moveRight(blocks) {
+  return blocks.map(b => ({ ...b, location: { ...b.location, x: add(b.location.x) } }));
+}
+
+function moveLeft(blocks) {
+  return blocks.map(b => ({ ...b, location: { ...b.location, x: subtract(b.location.x) } }));
+}
+
 function reduceTick(state) {
   const liveBlocks = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
   return {
@@ -72,10 +88,13 @@ export default function(state, action) {
   }
 
   switch (action.type) {
+    case 'MOVE_LEFT':
+      return { ...state, liveBlocks: moveLeft(state.liveBlocks) };
+    case 'MOVE_RIGHT':
+      return { ...state, liveBlocks: moveRight(state.liveBlocks) };
     case 'START_GAME':
       return { ...state, state: states.PLAYING };
     case 'TICK':
-      console.log('hihihi');
       return reduceTick(state);
     default:
   }
