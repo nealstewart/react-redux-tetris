@@ -42,7 +42,39 @@ function moveLeft(blocks) {
   return blocks.map(b => ({ ...b, location: { ...b.location, x: subtract(b.location.x) } }));
 }
 
-function reduceTick(state) {
+function equalLocations(a, b) {
+  return a.x === b.x && b.y === b.y;
+}
+
+function blockInTheWay(liveBlocks, deadBlocks) {
+  return liveBlocks.some(liveB =>
+    deadBlocks.some(deadB => equalLocations(moveDown(liveB.location), deadB.location))
+  );
+}
+
+function blockAtBottom(blocks) {
+  return blocks.some(b => b.location.y + 1 === VISIBLE_BOARD_SIZE.y);
+}
+
+function wouldHitSomething(liveBlocks, deadBlocks) {
+  return blockAtBottom(liveBlocks) || blockInTheWay(liveBlocks, deadBlocks);
+}
+
+function tick(state) {
+  if (wouldHitSomething(state.liveBlocks, state.deadBlocks)) {
+    const newBlocks = createShape({
+      name: 'I',
+      colour: colours.BLUE,
+    }, state.blockCount);
+
+    return {
+      ...state,
+      liveBlocks: newBlocks,
+      deadBlocks: state.deadBlocks.concat(state.liveBlocks),
+      blockCount: state.blockCount + newBlocks.length,
+    };
+  }
+
   const liveBlocks = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
   return {
     ...state, liveBlocks,
@@ -95,7 +127,7 @@ export default function(state, action) {
     case 'START_GAME':
       return { ...state, state: states.PLAYING };
     case 'TICK':
-      return reduceTick(state);
+      return tick(state);
     default:
   }
 
