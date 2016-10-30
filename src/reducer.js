@@ -34,22 +34,32 @@ function add(num) {
   return num === VISIBLE_BOARD_SIZE.x ? num : num + 1;
 }
 
-function moveRight(blocks) {
-  return blocks.map(b => ({ ...b, location: { ...b.location, x: add(b.location.x) } }));
-}
-
-function moveLeft(blocks) {
-  return blocks.map(b => ({ ...b, location: { ...b.location, x: subtract(b.location.x) } }));
-}
-
 function equalLocations(a, b) {
   return a.x === b.x && a.y === b.y;
 }
 
 function blockInTheWay(liveBlocks, deadBlocks) {
   return liveBlocks.some(liveB =>
-    deadBlocks.some(deadB => equalLocations(moveDown(liveB.location), deadB.location))
+    deadBlocks.some(deadB => equalLocations(liveB.location, deadB.location))
   );
+}
+
+function moveRight(blocks, deadBlocks) {
+  const moved = blocks.map(b => ({ ...b, location: { ...b.location, x: add(b.location.x) } }));
+  if (!blockInTheWay(moved, deadBlocks)) {
+    return moved;
+  }
+
+  return blocks;
+}
+
+function moveLeft(blocks, deadBlocks) {
+  const moved = blocks.map(b => ({ ...b, location: { ...b.location, x: subtract(b.location.x) } }));
+  if (!blockInTheWay(moved, deadBlocks)) {
+    return moved;
+  }
+
+  return blocks;
 }
 
 function blockAtBottom(blocks) {
@@ -57,7 +67,9 @@ function blockAtBottom(blocks) {
 }
 
 function tick(state) {
-  if (blockAtBottom(state.liveBlocks) || blockInTheWay(state.liveBlocks, state.deadBlocks)) {
+  const blocksDown = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
+
+  if (blockAtBottom(state.liveBlocks) || blockInTheWay(blocksDown, state.deadBlocks)) {
     const newBlocks = createShape({
       name: 'I',
       colour: colours.BLUE,
@@ -71,9 +83,9 @@ function tick(state) {
     };
   }
 
-  const liveBlocks = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
+
   return {
-    ...state, liveBlocks,
+    ...state, liveBlocks: blocksDown,
   };
 }
 
@@ -117,9 +129,9 @@ export default function(state, action) {
 
   switch (action.type) {
     case 'MOVE_LEFT':
-      return { ...state, liveBlocks: moveLeft(state.liveBlocks) };
+      return { ...state, liveBlocks: moveLeft(state.liveBlocks, state.deadBlocks) };
     case 'MOVE_RIGHT':
-      return { ...state, liveBlocks: moveRight(state.liveBlocks) };
+      return { ...state, liveBlocks: moveRight(state.liveBlocks, state.deadBlocks) };
     case 'START_GAME':
       return { ...state, state: states.PLAYING };
     case 'TICK':
