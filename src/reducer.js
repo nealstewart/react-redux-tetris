@@ -43,7 +43,7 @@ function moveLeft(blocks) {
 }
 
 function equalLocations(a, b) {
-  return a.x === b.x && b.y === b.y;
+  return a.x === b.x && a.y === b.y;
 }
 
 function blockInTheWay(liveBlocks, deadBlocks) {
@@ -56,12 +56,8 @@ function blockAtBottom(blocks) {
   return blocks.some(b => b.location.y + 1 === VISIBLE_BOARD_SIZE.y);
 }
 
-function wouldHitSomething(liveBlocks, deadBlocks) {
-  return blockAtBottom(liveBlocks) || blockInTheWay(liveBlocks, deadBlocks);
-}
-
 function tick(state) {
-  if (wouldHitSomething(state.liveBlocks, state.deadBlocks)) {
+  if (blockAtBottom(state.liveBlocks) || blockInTheWay(state.liveBlocks, state.deadBlocks)) {
     const newBlocks = createShape({
       name: 'I',
       colour: colours.BLUE,
