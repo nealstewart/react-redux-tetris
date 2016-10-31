@@ -67,11 +67,22 @@ function blockAtBottom(blocks) {
 }
 
 function clearLines(blocks) {
-  const lineGroupedBlocks = _.map(_.groupBy(blocks, b => b.location.y), (lineBlocks, height) => ({ lineBlocks, height }));
-
-  const fullLines = _.filter(lineGroupedBlocks, ({ lineBlocks }) => lineBlocks.length === VISIBLE_BOARD_SIZE.x);
-
-  return blocks;
+  const lineGroupedBlocks = _.map(
+    _.groupBy(blocks, b => b.location.y),
+    (lineBlocks, height) => ({ lineBlocks, height })
+  );
+  const fullLines = _.filter(lineGroupedBlocks,
+    ({ lineBlocks }) => lineBlocks.length === VISIBLE_BOARD_SIZE.x);
+  const blocksToClear = _.flatten(_.map(fullLines, 'lineBlocks'));
+  const remainingBlocks = _.difference(blocks, blocksToClear);
+  const droppedRemainingBlocks = remainingBlocks.map((block) => {
+    const linesBelow = fullLines.filter(({ height }) => block.location.y < height);
+    return { ...block, location: { ...block.location, y: block.location.y + linesBelow.length } };
+  });
+  return {
+    remaining: droppedRemainingBlocks,
+    points: fullLines.length * 100,
+  };
 }
 
 function tick(state) {
@@ -80,7 +91,7 @@ function tick(state) {
   if (blockAtBottom(state.liveBlocks) || blockInTheWay(blocksDown, state.deadBlocks)) {
     const newDeadBlocks = state.deadBlocks.concat(state.liveBlocks);
 
-    const {clearedBlocks, points} = clearLines(newDeadBlocks);
+    const { remaining, points } = clearLines(newDeadBlocks);
 
     const newBlocks = createShape({
       name: 'I',
@@ -90,7 +101,8 @@ function tick(state) {
     return {
       ...state,
       liveBlocks: newBlocks,
-      deadBlocks: newDeadBlocks,
+      deadBlocks: remaining,
+      score: state.score + points,
       blockCount: state.blockCount + newBlocks.length,
     };
   }
