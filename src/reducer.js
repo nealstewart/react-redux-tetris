@@ -1,6 +1,8 @@
 import _ from 'lodash';
+import * as immutable from 'immutable';
 import states from './states';
 import colours from './colours';
+
 
 const VISIBLE_BOARD_SIZE = {
   x: 10,
@@ -158,6 +160,40 @@ function createInitialState() {
   };
 }
 
+function createEmptyMultiDimensionalContainer(width, height) {
+  return _.range(0, width).reduce((firstDim) => {
+    const secondDim = _.range(0, height).reduce(dim => dim.push(null), new immutable.List());
+    return firstDim.push(secondDim);
+  }, new immutable.List());
+}
+
+function transpose(list) {
+  return list.get(0).map((col, i) => list.map(row => row.get(i)));
+}
+
+function rotate(liveBlocks, deadBlocks) {
+  const minX = _.minBy(liveBlocks, b => b.location.x).location.x;
+  const minY = _.minBy(liveBlocks, b => b.location.y).location.y;
+  const width = (_.maxBy(liveBlocks, b => b.location.x).location.x - minX) + 1;
+  const height = (_.maxBy(liveBlocks, b => b.location.y).location.y - minY) + 1;
+
+  const translatedList = liveBlocks.map(b => ({ ...b, location: { x: b.location.x - minX, y: b.location.y - minY } }));
+
+  const liveBlockTwoDim = translatedList.reduce((container, block) =>
+    container.set(block.location.x, container.get(block.location.x).set(block.location.y, block)),
+    createEmptyMultiDimensionalContainer(width, height));
+
+  const transposed = transpose(liveBlockTwoDim);
+  const updated = transposed.map((row, x) => row.map((b, y) => ({ ...b, location: { x: x + minX + 1, y: y + minY + 1 } })));
+  const updatedLiveBlocks = _.flatten(updated.toArray().map(row => row.toArray()));
+
+  if (!blockInTheWay(updatedLiveBlocks, deadBlocks)) {
+    return updatedLiveBlocks;
+  }
+
+  return liveBlocks;
+}
+
 export default function(state, action) {
   if (typeof state === 'undefined') {
     return createInitialState();
@@ -166,6 +202,8 @@ export default function(state, action) {
   switch (action.type) {
     case 'TICK':
       return tick(state);
+    case 'ROTATE':
+      return { ...state, liveBlocks: rotate(state.liveBlocks, state.deadBlocks) };
     case 'MOVE_LEFT':
       return { ...state, liveBlocks: moveLeft(state.liveBlocks, state.deadBlocks) };
     case 'MOVE_RIGHT':
@@ -174,7 +212,6 @@ export default function(state, action) {
       return moveDownUntilBottom(state);
     case 'START_GAME':
       return { ...state, state: states.PLAYING };
-
     default:
   }
 

@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { TickerContainer } from './ticker';
 import { ScoreContainer } from './score';
 import { TetrisBoardContainer } from './tetris_board';
-import { moveLeft, moveRight, tick, drop } from '../actions';
+import { moveLeft, moveRight, tick, drop, rotate } from '../actions';
 
 function isArrowEvent(code) {
   return code === 'ArrowLeft' ||
@@ -33,6 +33,9 @@ class GameScreen extends React.Component {
       case 'ArrowDown':
         this.props.moveDown();
         break;
+      case 'ArrowUp':
+        this.props.rotate();
+        break;
       case 'ArrowLeft':
         this.props.moveLeft();
         break;
@@ -60,6 +63,7 @@ GameScreen.propTypes = {
   moveLeft: PropTypes.func.isRequired,
   moveDown: PropTypes.func.isRequired,
   drop: PropTypes.func.isRequired,
+  rotate: PropTypes.func.isRequired,
 };
 
 const GameScreenContainer = connect(
@@ -69,6 +73,7 @@ const GameScreenContainer = connect(
     moveRight: () => dispatch(moveRight()),
     moveDown: () => dispatch(tick()),
     drop: () => dispatch(drop()),
+    rotate: () => dispatch(rotate()),
   })
 )(GameScreen);
 
