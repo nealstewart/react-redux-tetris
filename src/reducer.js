@@ -99,17 +99,12 @@ function clearLines(blocks) {
   };
 }
 
-function getNextShape(lastShape) {
+function getNextShape(deadBlocks) {
   const shapeNames = Object.keys(SHAPES);
   const colourNames = Object.keys(colours);
-  const lastShapeIndex = shapeNames.indexOf(lastShape.name);
-  const lastColourIndex = colourNames.indexOf(lastShape.colour);
-
-  const nextShapeIndex = lastShapeIndex < shapeNames.length - 1 ? lastShapeIndex + 1 : 0;
-  const nextColourIndex = lastColourIndex < colourNames.length - 1 ? lastColourIndex + 1 : 0;
   return {
-    name: shapeNames[nextShapeIndex],
-    colour: colours[colourNames[nextColourIndex]],
+    name: shapeNames[Math.floor(deadBlocks.length / 2) % shapeNames.length],
+    colour: colourNames[Math.floor(deadBlocks.length / 2) % colourNames.length],
   };
 }
 
@@ -121,7 +116,7 @@ function tick(state) {
 
     const { remaining, points } = clearLines(newDeadBlocks);
 
-    const nextShape = getNextShape(state.currentShape);
+    const nextShape = getNextShape(state.deadBlocks);
     const newBlocks = createShape(nextShape, state.blockCount);
 
     return {
