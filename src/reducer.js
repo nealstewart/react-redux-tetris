@@ -3,7 +3,6 @@ import * as immutable from 'immutable';
 import states from './states';
 import colours from './colours';
 
-
 const VISIBLE_BOARD_SIZE = {
   x: 10,
   y: 20,
@@ -100,7 +99,7 @@ function tick(state) {
     const { remaining, points } = clearLines(newDeadBlocks);
 
     const newBlocks = createShape({
-      name: 'I',
+      name: 'T',
       colour: colours.BLUE,
     }, state.blockCount);
 
@@ -177,15 +176,13 @@ function rotate(liveBlocks, deadBlocks) {
   const width = (_.maxBy(liveBlocks, b => b.location.x).location.x - minX) + 1;
   const height = (_.maxBy(liveBlocks, b => b.location.y).location.y - minY) + 1;
 
-  const translatedList = liveBlocks.map(b => ({ ...b, location: { x: b.location.x - minX, y: b.location.y - minY } }));
-
-  const liveBlockTwoDim = translatedList.reduce((container, block) =>
-    container.set(block.location.x, container.get(block.location.x).set(block.location.y, block)),
+  const liveBlockTwoDim = liveBlocks.reduce((container, block) =>
+    container.set(block.location.x - minX, container.get(block.location.x - minX).set(block.location.y - minY, block)),
     createEmptyMultiDimensionalContainer(width, height));
 
   const transposed = transpose(liveBlockTwoDim);
-  const updated = transposed.map((row, x) => row.map((b, y) => ({ ...b, location: { x: x + minX + 1, y: y + minY + 1 } })));
-  const updatedLiveBlocks = _.flatten(updated.toArray().map(row => row.toArray()));
+  const updated = transposed.map((row, x) => row.map((b, y) => (b && { ...b, location: { x: x + minX, y: y + minY } })));
+  const updatedLiveBlocks = _.compact(_.flatten(updated.toArray().map(row => row.toArray())));
 
   if (!blockInTheWay(updatedLiveBlocks, deadBlocks)) {
     return updatedLiveBlocks;
