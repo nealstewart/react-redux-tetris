@@ -71,14 +71,18 @@ function clearLines(blocks) {
     _.groupBy(blocks, b => b.location.y),
     (lineBlocks, height) => ({ lineBlocks, height })
   );
-  const fullLines = _.filter(lineGroupedBlocks,
-    ({ lineBlocks }) => lineBlocks.length === VISIBLE_BOARD_SIZE.x);
+
+  const fullLines = lineGroupedBlocks.filter(({ lineBlocks }) => lineBlocks.length === VISIBLE_BOARD_SIZE.x);
+
   const blocksToClear = _.flatten(_.map(fullLines, 'lineBlocks'));
+
   const remainingBlocks = _.difference(blocks, blocksToClear);
+
   const droppedRemainingBlocks = remainingBlocks.map((block) => {
     const linesBelow = fullLines.filter(({ height }) => block.location.y < height);
     return { ...block, location: { ...block.location, y: block.location.y + linesBelow.length } };
   });
+
   return {
     remaining: droppedRemainingBlocks,
     points: fullLines.length * 100,
@@ -107,10 +111,18 @@ function tick(state) {
     };
   }
 
-
   return {
     ...state, liveBlocks: blocksDown,
   };
+}
+
+function moveDownUntilBottom(state) {
+  let stateAfterTick = state;
+  do {
+    stateAfterTick = tick(stateAfterTick);
+  } while (stateAfterTick.deadBlocks === state.deadBlocks);
+
+  return stateAfterTick;
 }
 
 const BOARD_SIZE = {
@@ -158,6 +170,8 @@ export default function(state, action) {
       return { ...state, liveBlocks: moveLeft(state.liveBlocks, state.deadBlocks) };
     case 'MOVE_RIGHT':
       return { ...state, liveBlocks: moveRight(state.liveBlocks, state.deadBlocks) };
+    case 'DROP':
+      return moveDownUntilBottom(state);
     case 'START_GAME':
       return { ...state, state: states.PLAYING };
 
