@@ -46,6 +46,10 @@ function blockInTheWay(liveBlocks, deadBlocks) {
 }
 
 function moveRight(blocks, deadBlocks) {
+  const atEdge = blocks.some(b => b.location.x === VISIBLE_BOARD_SIZE.x - 1);
+  if (atEdge) {
+    return blocks;
+  }
   const moved = blocks.map(b => ({ ...b, location: { ...b.location, x: add(b.location.x) } }));
   if (!blockInTheWay(moved, deadBlocks)) {
     return moved;
@@ -55,6 +59,10 @@ function moveRight(blocks, deadBlocks) {
 }
 
 function moveLeft(blocks, deadBlocks) {
+  const atEdge = blocks.some(b => b.location.x === 0);
+  if (atEdge) {
+    return blocks;
+  }
   const moved = blocks.map(b => ({ ...b, location: { ...b.location, x: subtract(b.location.x) } }));
   if (!blockInTheWay(moved, deadBlocks)) {
     return moved;
@@ -184,7 +192,8 @@ function rotate(liveBlocks, deadBlocks) {
   const updated = transposed.map((row, x) => row.map((b, y) => (b && { ...b, location: { x: x + minX, y: y + minY } })));
   const updatedLiveBlocks = _.compact(_.flatten(updated.toArray().map(row => row.toArray())));
 
-  if (!blockInTheWay(updatedLiveBlocks, deadBlocks)) {
+  const overEdge = updatedLiveBlocks.some(b => b.location.x < 0 || b.location.x >= VISIBLE_BOARD_SIZE.x || b.location.y >= VISIBLE_BOARD_SIZE.y || b.location.y < 0);
+  if (!overEdge && !blockInTheWay(updatedLiveBlocks, deadBlocks)) {
     return updatedLiveBlocks;
   }
 
