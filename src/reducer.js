@@ -2,15 +2,16 @@ import _ from 'lodash';
 import * as immutable from 'immutable';
 import states from './states';
 import colours from './colours';
-
-const VISIBLE_BOARD_SIZE = {
-  x: 10,
-  y: 20,
-};
+import boardSize from './board_size';
 
 const SHAPES = {
   I: [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 1, y: 3 }],
   T: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 0, y: 2 }],
+  O: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }],
+  J: [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 0, y: 2 }],
+  L: [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 2 }],
+  S: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 1, y: 2 }],
+  Z: [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 0, y: 1 }, { x: 0, y: 2 }],
 };
 
 function createShape(shapeType, blockCount) {
@@ -32,7 +33,7 @@ function subtract(num) {
 }
 
 function add(num) {
-  return num < VISIBLE_BOARD_SIZE.x - 1 ? num + 1 : num;
+  return num < boardSize.x - 1 ? num + 1 : num;
 }
 
 function equalLocations(a, b) {
@@ -46,7 +47,7 @@ function blockInTheWay(liveBlocks, deadBlocks) {
 }
 
 function moveRight(blocks, deadBlocks) {
-  const atEdge = blocks.some(b => b.location.x === VISIBLE_BOARD_SIZE.x - 1);
+  const atEdge = blocks.some(b => b.location.x === boardSize.x - 1);
   if (atEdge) {
     return blocks;
   }
@@ -72,7 +73,7 @@ function moveLeft(blocks, deadBlocks) {
 }
 
 function blockAtBottom(blocks) {
-  return blocks.some(b => b.location.y + 1 === VISIBLE_BOARD_SIZE.y);
+  return blocks.some(b => b.location.y + 1 === boardSize.y);
 }
 
 function clearLines(blocks) {
@@ -81,7 +82,7 @@ function clearLines(blocks) {
     (lineBlocks, height) => ({ lineBlocks, height })
   );
 
-  const fullLines = lineGroupedBlocks.filter(({ lineBlocks }) => lineBlocks.length === VISIBLE_BOARD_SIZE.x);
+  const fullLines = lineGroupedBlocks.filter(({ lineBlocks }) => lineBlocks.length === boardSize.x);
 
   const blocksToClear = _.flatten(_.map(fullLines, 'lineBlocks'));
 
@@ -98,6 +99,20 @@ function clearLines(blocks) {
   };
 }
 
+function getNextShape(lastShape) {
+  const shapeNames = Object.keys(SHAPES);
+  const colourNames = Object.keys(colours);
+  const lastShapeIndex = shapeNames.indexOf(lastShape.name);
+  const lastColourIndex = colourNames.indexOf(lastShape.colour);
+
+  const nextShapeIndex = lastShapeIndex < shapeNames.length - 1 ? lastShapeIndex + 1 : 0;
+  const nextColourIndex = lastColourIndex < colourNames.length - 1 ? lastColourIndex + 1 : 0;
+  return {
+    name: shapeNames[nextShapeIndex],
+    colour: colours[colourNames[nextColourIndex]],
+  };
+}
+
 function tick(state) {
   const blocksDown = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
 
@@ -106,13 +121,12 @@ function tick(state) {
 
     const { remaining, points } = clearLines(newDeadBlocks);
 
-    const newBlocks = createShape({
-      name: 'T',
-      colour: colours.BLUE,
-    }, state.blockCount);
+    const nextShape = getNextShape(state.currentShape);
+    const newBlocks = createShape(nextShape, state.blockCount);
 
     return {
       ...state,
+      currentShape: nextShape,
       liveBlocks: newBlocks,
       deadBlocks: remaining,
       score: state.score + points,
@@ -134,13 +148,8 @@ function moveDownUntilBottom(state) {
   return stateAfterTick;
 }
 
-const BOARD_SIZE = {
-  x: 10,
-  y: 22,
-};
-
 function moveToMiddle(shape) {
-  const xMove = Math.floor((BOARD_SIZE.x) / 2);
+  const xMove = Math.floor((boardSize.x) / 2);
   return _.map(shape, p => (
     {
       ...p,
@@ -153,13 +162,15 @@ function moveToMiddle(shape) {
 }
 
 function createInitialState() {
-  const liveBlocks = moveToMiddle(createShape({
+  const currentShape = {
     name: 'I',
     colour: colours.LIGHTBLUE,
-  }, 0));
+  };
+  const liveBlocks = moveToMiddle(createShape(currentShape, 0));
 
   return {
     state: states.IDLE,
+    currentShape,
     liveBlocks,
     blockCount: liveBlocks.length,
     score: 0,
@@ -185,14 +196,21 @@ function rotate(liveBlocks, deadBlocks) {
   const height = (_.maxBy(liveBlocks, b => b.location.y).location.y - minY) + 1;
 
   const liveBlockTwoDim = liveBlocks.reduce((container, block) =>
-    container.set(block.location.x - minX, container.get(block.location.x - minX).set(block.location.y - minY, block)),
+    container.set(
+      block.location.x - minX,
+      container.get(block.location.x - minX).set(block.location.y - minY, block)
+    ),
     createEmptyMultiDimensionalContainer(width, height));
 
   const transposed = transpose(liveBlockTwoDim);
-  const updated = transposed.map((row, x) => row.map((b, y) => (b && { ...b, location: { x: x + minX, y: y + minY } })));
+  const updated = transposed.map((row, x) =>
+    row.map((b, y) => (b && { ...b, location: { x: x + minX, y: y + minY } })));
   const updatedLiveBlocks = _.compact(_.flatten(updated.toArray().map(row => row.toArray())));
 
-  const overEdge = updatedLiveBlocks.some(b => b.location.x < 0 || b.location.x >= VISIBLE_BOARD_SIZE.x || b.location.y >= VISIBLE_BOARD_SIZE.y || b.location.y < 0);
+  const overEdge = updatedLiveBlocks.some(b =>
+    b.location.x < 0 || b.location.x >= boardSize.x ||
+    b.location.y >= boardSize.y || b.location.y < 0);
+
   if (!overEdge && !blockInTheWay(updatedLiveBlocks, deadBlocks)) {
     return updatedLiveBlocks;
   }
