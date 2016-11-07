@@ -186,7 +186,7 @@ function createEmptyMultiDimensionalContainer(width, height) {
 }
 
 function transpose(list) {
-  return list.get(0).map((col, i) => list.map(row => row.get(i)));
+  return list.get(0).map((col, i) => list.map(row => row.get((row.size - 1) - i)));
 }
 
 function rotate(liveBlocks, deadBlocks) {
@@ -203,6 +203,7 @@ function rotate(liveBlocks, deadBlocks) {
     createEmptyMultiDimensionalContainer(width, height));
 
   const transposed = transpose(liveBlockTwoDim);
+
   const updated = transposed.map((row, x) =>
     row.map((b, y) => (b && { ...b, location: { x: x + minX, y: y + minY } })));
   const updatedLiveBlocks = _.compact(_.flatten(updated.toArray().map(row => row.toArray())));
