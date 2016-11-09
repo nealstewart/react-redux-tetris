@@ -15,9 +15,10 @@ function add(num) {
   return num < boardSize.x - 1 ? num + 1 : num;
 }
 
+const atRightEdge = blocks => blocks.some(b => b.location.x === boardSize.x - 1);
+
 function moveRight(blocks, deadBlocks) {
-  const atEdge = blocks.some(b => b.location.x === boardSize.x - 1);
-  if (atEdge) {
+  if (atRightEdge(blocks)) {
     return blocks;
   }
   const moved = blocks.map(b => ({ ...b, location: { ...b.location, x: add(b.location.x) } }));
@@ -123,6 +124,10 @@ export default function(state, action) {
   }
 
   switch (action.type) {
+    case 'PAUSE':
+      return { ...state, state: states.PAUSED };
+    case 'UNPAUSE':
+      return { ...state, state: states.PLAYING };
     case 'TICK':
       return tick(state);
     case 'ROTATE':

@@ -9,7 +9,7 @@ function Root(props) {
   return (
     <div>
       {props.state === states.IDLE && <StartScreenContainer />}
-      {props.state === states.PLAYING && <GameScreenContainer />}
+      {(props.state === states.PLAYING || props.state === states.PAUSED) && <GameScreenContainer />}
     </div>
   );
 }

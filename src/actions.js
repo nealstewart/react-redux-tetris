@@ -33,3 +33,15 @@ export function rotate() {
     type: 'ROTATE',
   };
 }
+
+export function pause() {
+  return {
+    type: 'PAUSE',
+  };
+}
+
+export function unpause() {
+  return {
+    type: 'UNPAUSE',
+  };
+}

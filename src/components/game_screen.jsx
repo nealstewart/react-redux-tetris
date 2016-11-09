@@ -4,7 +4,8 @@ import { connect } from 'react-redux';
 import { TickerContainer } from './ticker';
 import { ScoreContainer } from './score';
 import { TetrisBoardContainer } from './tetris_board';
-import { moveLeft, moveRight, tick, drop, rotate } from '../actions';
+import { moveLeft, moveRight, tick, drop, rotate, pause, unpause } from '../actions';
+import states from '../states';
 
 function isArrowEvent(code) {
   return code === 'ArrowLeft' ||
@@ -14,16 +15,27 @@ function isArrowEvent(code) {
 
 class GameScreen extends React.Component {
   componentDidMount() {
-    document.addEventListener('keydown', this.mapEventToDispatch.bind(this));
+    _.bindAll(this, 'mapKeycodeToAction');
+    document.addEventListener('keydown', this.mapKeycodeToAction);
   }
   componentWillUnmount() {
-    document.removeEventListener('keydown', this.mapEventToDispatch.bind(this));
-    clearTimeout(this.timeout);
+    document.removeEventListener('keydown', this.mapKeycodeToAction);
   }
 
-  mapEventToDispatch(e) {
+  checkForUnpause(e) {
+    if (e.code === 'KeyP') {
+      this.props.unpause();
+    }
+  }
+
+  mapKeycodeToAction(e) {
     if (isArrowEvent(e.code)) {
       e.preventDefault();
+    }
+
+    if (this.props.state === states.PAUSED) {
+      this.checkForUnpause(e);
+      return;
     }
 
     switch (e.code) {
@@ -42,6 +54,9 @@ class GameScreen extends React.Component {
       case 'Space':
         this.props.drop();
         break;
+      case 'KeyP':
+        this.props.pause();
+        break;
       default:
     }
   }
@@ -52,7 +67,7 @@ class GameScreen extends React.Component {
         <header>Game Screen</header>
         <ScoreContainer />
         <TetrisBoardContainer />
-        <TickerContainer />
+        { this.props.state === states.PLAYING && <TickerContainer /> }
       </div>
     );
   }
@@ -64,6 +79,9 @@ GameScreen.propTypes = {
   moveDown: PropTypes.func.isRequired,
   drop: PropTypes.func.isRequired,
   rotate: PropTypes.func.isRequired,
+  pause: PropTypes.func.isRequired,
+  unpause: PropTypes.func.isRequired,
+  state: PropTypes.string.isRequired,
 };
 
 const GameScreenContainer = connect(
@@ -74,6 +92,8 @@ const GameScreenContainer = connect(
     moveDown: () => dispatch(tick()),
     drop: () => dispatch(drop()),
     rotate: () => dispatch(rotate()),
+    pause: () => dispatch(pause()),
+    unpause: () => dispatch(unpause()),
   })
 )(GameScreen);
 

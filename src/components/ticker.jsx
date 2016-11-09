@@ -6,7 +6,7 @@ class Ticker extends React.Component {
   componentDidMount() {
     const myTick = () => {
       this.props.tick();
-      setTimeout(myTick, 1000);
+      this.timeout = setTimeout(myTick, 1000);
     };
     this.timeout = setTimeout(myTick, 1000);
   }
