@@ -11,10 +11,18 @@ export function TetrisBoard(props) {
   const style = {
     width: boardSize.x * blockSize,
     height: boardSize.y * blockSize,
+    top: `${-4 * blockSize}px`,
+    overflow: 'none',
+  };
+  const wrapperStyle = {
+    width: boardSize.x * blockSize,
+    height: boardSize.y * blockSize,
   };
   return (
-    <div style={style} className="tetris-board">
-      {blocks}
+    <div style={wrapperStyle} className="tetris-board-wrapper">
+      <div style={style} className="tetris-board">
+        {blocks}
+      </div>
     </div>
   );
 }

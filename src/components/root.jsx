@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import React, { PropTypes } from 'react';
 import states from '../states';
 import { GameScreenContainer } from './game_screen';
+import { GameoverScreenContainer } from './gameover_screen';
 import { StartScreenContainer } from './start_screen';
 
 function Root(props) {
@@ -10,6 +11,7 @@ function Root(props) {
     <div>
       {props.state === states.IDLE && <StartScreenContainer />}
       {(props.state === states.PLAYING || props.state === states.PAUSED) && <GameScreenContainer />}
+      {(props.state === states.GAMEOVER) && <GameoverScreenContainer />}
     </div>
   );
 }

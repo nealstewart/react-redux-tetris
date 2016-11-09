@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import states from './states';
 import boardSize from './board_size';
-import { blockInTheWay, rotate, getNextShape, createShape } from './tetrominos';
+import { getBlockProperties, blockInTheWay, rotate, getNextShape, createShape } from './tetrominos';
 
 function moveDown(location) {
   return { ...location, y: location.y + 1 };
@@ -14,6 +14,8 @@ function subtract(num) {
 function add(num) {
   return num < boardSize.x - 1 ? num + 1 : num;
 }
+
+const DEATH_LINE = 4;
 
 const atRightEdge = blocks => blocks.some(b => b.location.x === boardSize.x - 1);
 
@@ -69,6 +71,14 @@ function clearLines(blocks) {
   };
 }
 
+function getNewState(deadBlocks, newBlocks) {
+  if (deadBlocks.some(b => b.location.y < DEATH_LINE) || blockInTheWay(deadBlocks, newBlocks)) {
+    return states.GAMEOVER;
+  }
+
+  return states.PLAYING;
+}
+
 function tick(state) {
   const blocksDown = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
 
@@ -82,6 +92,7 @@ function tick(state) {
 
     return {
       ...state,
+      state: getNewState(newDeadBlocks, newBlocks),
       currentShape: nextShape,
       liveBlocks: newBlocks,
       deadBlocks: remaining,
@@ -139,7 +150,7 @@ export default function(state, action) {
     case 'DROP':
       return moveDownUntilBottom(state);
     case 'START_GAME':
-      return { ...state, state: states.PLAYING };
+      return { ...createInitialState(), state: states.PLAYING };
     default:
   }
 
