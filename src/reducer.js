@@ -5,11 +5,11 @@ import colours from './colours';
 import boardSize from './board_size';
 
 const SHAPES = {
-  I: [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 1, y: 3 }],
+  I: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 0, y: 3 }],
   T: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 0, y: 2 }],
   O: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }],
   J: [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 0, y: 2 }],
-  L: [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 2 }],
+  L: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 1, y: 2 }],
   S: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 1, y: 2 }],
   Z: [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 0, y: 1 }, { x: 0, y: 2 }],
 };
@@ -99,6 +99,29 @@ function clearLines(blocks) {
   };
 }
 
+function getBlockProperties(liveBlocks) {
+  const minX = _.minBy(liveBlocks, b => b.location.x).location.x;
+  const minY = _.minBy(liveBlocks, b => b.location.y).location.y;
+  const width = (_.maxBy(liveBlocks, b => b.location.x).location.x - minX) + 1;
+  const height = (_.maxBy(liveBlocks, b => b.location.y).location.y - minY) + 1;
+
+  return { minX, minY, width, height };
+}
+
+function moveToMiddle(shape) {
+  const { width } = getBlockProperties(shape);
+  const xMove = Math.floor(boardSize.x / 2) - Math.floor(width / 2);
+  return _.map(shape, p => (
+    {
+      ...p,
+      location: {
+        ...p.location,
+        x: xMove + p.location.x,
+      },
+    }
+  ));
+}
+
 function getNextShape(deadBlocks) {
   const shapeNames = Object.keys(SHAPES);
   const colourNames = Object.keys(colours);
@@ -117,7 +140,7 @@ function tick(state) {
     const { remaining, points } = clearLines(newDeadBlocks);
 
     const nextShape = getNextShape(state.deadBlocks);
-    const newBlocks = createShape(nextShape, state.blockCount);
+    const newBlocks = moveToMiddle(createShape(nextShape, state.blockCount));
 
     return {
       ...state,
@@ -141,19 +164,6 @@ function moveDownUntilBottom(state) {
   } while (stateAfterTick.deadBlocks === state.deadBlocks);
 
   return stateAfterTick;
-}
-
-function moveToMiddle(shape) {
-  const xMove = Math.floor((boardSize.x) / 2);
-  return _.map(shape, p => (
-    {
-      ...p,
-      location: {
-        ...p.location,
-        x: xMove + p.location.x,
-      },
-    }
-  ));
 }
 
 function createInitialState() {
@@ -185,11 +195,7 @@ function transpose(list) {
 }
 
 function rotate(liveBlocks, deadBlocks) {
-  const minX = _.minBy(liveBlocks, b => b.location.x).location.x;
-  const minY = _.minBy(liveBlocks, b => b.location.y).location.y;
-  const width = (_.maxBy(liveBlocks, b => b.location.x).location.x - minX) + 1;
-  const height = (_.maxBy(liveBlocks, b => b.location.y).location.y - minY) + 1;
-
+  const { minX, minY, width, height } = getBlockProperties(liveBlocks);
   const liveBlockTwoDim = liveBlocks.reduce((container, block) =>
     container.set(
       block.location.x - minX,
