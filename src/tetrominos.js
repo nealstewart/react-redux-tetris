@@ -22,7 +22,7 @@ function getBlockProperties(liveBlocks) {
   return { minX, minY, width, height };
 }
 
-function moveToMiddle(shape) {
+export function moveToMiddle(shape) {
   const { width } = getBlockProperties(shape);
   const xMove = Math.floor(boardSize.x / 2) - Math.floor(width / 2);
   return map(shape, p => (
@@ -106,21 +106,46 @@ export function rotate(liveBlocks, deadBlocks) {
   return liveBlocks;
 }
 
-export function createShape(shapeType, blockCount) {
-  return moveToMiddle(map(SHAPES[shapeType.name].slice(),
+export function createBlocks(shapeType, blockCount) {
+  return map(SHAPES[shapeType.name].slice(),
     (location, i) => ({
       location,
       colour: shapeType.colour,
       key: `block-${blockCount + i}`,
     })
-  ));
+  );
 }
 
-export function getNextShape(deadBlocks) {
-  const shapeNames = Object.keys(SHAPES);
+function getSum(state) {
+  return state.deadBlocks.length +
+    state.liveBlocks.length +
+    state.linesCleared +
+    state.level +
+    state.blockCount;
+}
+
+function getNextColourName(state) {
   const colourNames = Object.keys(colours);
-  return {
-    name: shapeNames[Math.floor(deadBlocks.length / 2) % shapeNames.length],
-    colour: colourNames[Math.floor(deadBlocks.length / 2) % colourNames.length],
-  };
+  if (!state) {
+    return colourNames[0];
+  }
+  const index = Math.floor(getSum(state)) % colourNames.length;
+  return colourNames[index];
+}
+
+function getNextShapeName(state) {
+  const shapeNames = Object.keys(SHAPES);
+  if (!state) {
+    return shapeNames[0];
+  }
+
+  const index = Math.floor(getSum(state)) % shapeNames.length;
+  return shapeNames[index];
+}
+
+export function getNextShape(state) {
+  const colour = getNextColourName(state);
+  const name = getNextShapeName(state);
+
+  return { name, colour };
 }

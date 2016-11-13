@@ -1,7 +1,18 @@
 import _ from 'lodash';
 import states from './states';
 import boardSize from './board_size';
-import { clearLines, blockInTheWay, rotate, getNextShape, createShape } from './tetrominos';
+import {
+  clearLines,
+  blockInTheWay,
+  rotate,
+  getNextShape,
+  createBlocks,
+  moveToMiddle,
+} from './tetrominos';
+
+function createBlocksForPlay(shape, blockCount) {
+  return moveToMiddle(createBlocks(shape, blockCount));
+}
 
 function moveDown(location) {
   return { ...location, y: location.y + 1 };
@@ -93,6 +104,17 @@ function calcLevel(level, linesCleared) {
   return level;
 }
 
+function addNextBlocks(state) {
+  const nextShape = getNextShape(state);
+  const nextBlocks = createBlocks(nextShape, state.blockCount);
+
+  return {
+    ...state,
+    nextBlocks,
+    blockCount: state.blockCount + nextBlocks.length,
+  };
+}
+
 function tick(state) {
   const blocksDown = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
 
@@ -100,22 +122,18 @@ function tick(state) {
     const newDeadBlocks = state.deadBlocks.concat(state.liveBlocks);
 
     const { remaining, linesCleared } = clearLines(newDeadBlocks);
-
-    const nextShape = getNextShape(newDeadBlocks);
-    const newBlocks = createShape(nextShape, state.blockCount);
+    const newBlocks = moveToMiddle(state.nextBlocks);
     const points = calcPoints(state.level, linesCleared, newDeadBlocks, state.liveBlocks);
 
-    return {
+    return addNextBlocks({
       ...state,
       state: getNewState(newDeadBlocks, newBlocks),
-      currentShape: nextShape,
       liveBlocks: newBlocks,
       deadBlocks: remaining,
       score: state.score + points,
       linesCleared: (state.linesCleared + linesCleared) % levelClearAmount,
       level: calcLevel(state.level, linesCleared + state.linesCleared),
-      blockCount: state.blockCount + newBlocks.length,
-    };
+    });
   }
 
   return {
@@ -133,19 +151,18 @@ function moveDownUntilBottom(state) {
 }
 
 function createInitialState() {
-  const currentShape = getNextShape([]);
-  const liveBlocks = createShape(currentShape, 0);
-
-  return {
+  const currentShape = getNextShape(null);
+  const liveBlocks = createBlocksForPlay(currentShape, 0);
+  return addNextBlocks({
     state: states.IDLE,
-    currentShape,
     liveBlocks,
     level: 0,
     linesCleared: 0,
     blockCount: liveBlocks.length,
     score: 0,
     deadBlocks: [],
-  };
+    actionCount: 0,
+  });
 }
 
 export default function(state, action) {
@@ -158,6 +175,7 @@ export default function(state, action) {
       return { ...state, state: states.PAUSED };
     case 'UNPAUSE':
       return { ...state, state: states.PLAYING };
+    case 'MOVE_DOWN':
     case 'TICK':
       return tick(state);
     case 'ROTATE':
