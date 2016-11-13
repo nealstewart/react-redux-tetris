@@ -83,6 +83,16 @@ function calcPoints(level, linesCleared, newDeadBlocks, liveBlocks) {
     calcClearedPoints(levelForCalculating, newDeadBlocks);
 }
 
+const levelClearAmount = 20;
+
+function calcLevel(level, linesCleared) {
+  if (linesCleared >= levelClearAmount) {
+    return level + 1;
+  }
+
+  return level;
+}
+
 function tick(state) {
   const blocksDown = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
 
@@ -102,6 +112,8 @@ function tick(state) {
       liveBlocks: newBlocks,
       deadBlocks: remaining,
       score: state.score + points,
+      linesCleared: (state.linesCleared + linesCleared) % levelClearAmount,
+      level: calcLevel(state.level, linesCleared + state.linesCleared),
       blockCount: state.blockCount + newBlocks.length,
     };
   }
@@ -129,6 +141,7 @@ function createInitialState() {
     currentShape,
     liveBlocks,
     level: 0,
+    linesCleared: 0,
     blockCount: liveBlocks.length,
     score: 0,
     deadBlocks: [],

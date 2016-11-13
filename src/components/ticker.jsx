@@ -6,9 +6,9 @@ class Ticker extends React.Component {
   componentDidMount() {
     const myTick = () => {
       this.props.tick();
-      this.timeout = setTimeout(myTick, 1000);
+      this.timeout = setTimeout(myTick, Math.floor(1000 / (this.props.level + 1)));
     };
-    this.timeout = setTimeout(myTick, 1000);
+    this.timeout = setTimeout(myTick, Math.floor(1000 / (this.props.level + 1)));
   }
 
   componentWillUnmount() {
@@ -22,10 +22,11 @@ class Ticker extends React.Component {
 
 Ticker.propTypes = {
   tick: PropTypes.func.isRequired,
+  level: PropTypes.number.isRequired,
 };
 
 const TickerContainer = connect(
-  null,
+  state => ({ level: state.level }),
   dispatch => ({ tick: () => dispatch(actions.tick()) })
 )(Ticker);
 
