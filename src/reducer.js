@@ -83,7 +83,7 @@ function calcPoints(level, linesCleared, newDeadBlocks, liveBlocks) {
     calcClearedPoints(levelForCalculating, newDeadBlocks);
 }
 
-const levelClearAmount = 20;
+const levelClearAmount = 10;
 
 function calcLevel(level, linesCleared) {
   if (linesCleared >= levelClearAmount) {
