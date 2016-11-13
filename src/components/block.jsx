@@ -12,8 +12,6 @@ export default function Block(props) {
   return <div className="block" style={style} />;
 }
 
-debugger;
-
 Block.propTypes = {
   block: blockShape,
 };

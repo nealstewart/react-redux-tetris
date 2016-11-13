@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import states from './states';
 import boardSize from './board_size';
-import { getBlockProperties, blockInTheWay, rotate, getNextShape, createShape } from './tetrominos';
+import { clearLines, blockInTheWay, rotate, getNextShape, createShape } from './tetrominos';
 
 function moveDown(location) {
   return { ...location, y: location.y + 1 };
@@ -48,29 +48,6 @@ function blockAtBottom(blocks) {
   return blocks.some(b => b.location.y + 1 === boardSize.y);
 }
 
-function clearLines(blocks) {
-  const lineGroupedBlocks = _.map(
-    _.groupBy(blocks, b => b.location.y),
-    (lineBlocks, height) => ({ lineBlocks, height })
-  );
-
-  const fullLines = lineGroupedBlocks.filter(({ lineBlocks }) => lineBlocks.length === boardSize.x);
-
-  const blocksToClear = _.flatten(_.map(fullLines, 'lineBlocks'));
-
-  const remainingBlocks = _.difference(blocks, blocksToClear);
-
-  const droppedRemainingBlocks = remainingBlocks.map((block) => {
-    const linesBelow = fullLines.filter(({ height }) => block.location.y < height);
-    return { ...block, location: { ...block.location, y: block.location.y + linesBelow.length } };
-  });
-
-  return {
-    remaining: droppedRemainingBlocks,
-    points: fullLines.length * 100,
-  };
-}
-
 function getNewState(deadBlocks, newBlocks) {
   if (deadBlocks.some(b => b.location.y < DEATH_LINE) || blockInTheWay(deadBlocks, newBlocks)) {
     return states.GAMEOVER;
@@ -79,16 +56,44 @@ function getNewState(deadBlocks, newBlocks) {
   return states.PLAYING;
 }
 
+const linesClearedPoints = [
+  0,
+  50,
+  150,
+  350,
+  1000,
+];
+
+function calcClearedPoints(levelForCalculating, newDeadBlocks) {
+  return !newDeadBlocks.length ? 2000 * levelForCalculating : 0;
+}
+
+function calcClearedLinesPoints(levelForCalculating, linesCleared) {
+  return levelForCalculating * linesClearedPoints[linesCleared];
+}
+
+function calcAddedBlocksPoints(levelForCalculating, liveBlocks) {
+  return levelForCalculating * liveBlocks.length * 10;
+}
+
+function calcPoints(level, linesCleared, newDeadBlocks, liveBlocks) {
+  const levelForCalculating = level + 1;
+  return calcClearedLinesPoints(levelForCalculating, linesCleared) +
+    calcAddedBlocksPoints(levelForCalculating, liveBlocks) +
+    calcClearedPoints(levelForCalculating, newDeadBlocks);
+}
+
 function tick(state) {
   const blocksDown = _.map(state.liveBlocks, b => ({ ...b, location: moveDown(b.location) }));
 
   if (blockAtBottom(state.liveBlocks) || blockInTheWay(blocksDown, state.deadBlocks)) {
     const newDeadBlocks = state.deadBlocks.concat(state.liveBlocks);
 
-    const { remaining, points } = clearLines(newDeadBlocks);
+    const { remaining, linesCleared } = clearLines(newDeadBlocks);
 
-    const nextShape = getNextShape(state.deadBlocks);
+    const nextShape = getNextShape(newDeadBlocks);
     const newBlocks = createShape(nextShape, state.blockCount);
+    const points = calcPoints(state.level, linesCleared, newDeadBlocks, state.liveBlocks);
 
     return {
       ...state,
@@ -123,6 +128,7 @@ function createInitialState() {
     state: states.IDLE,
     currentShape,
     liveBlocks,
+    level: 0,
     blockCount: liveBlocks.length,
     score: 0,
     deadBlocks: [],

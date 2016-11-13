@@ -1,4 +1,4 @@
-import { compact, flatten, range, minBy, maxBy, map } from 'lodash';
+import { difference, groupBy, compact, flatten, range, minBy, maxBy, map } from 'lodash';
 import { List } from 'immutable';
 import colours from './colours';
 import boardSize from './board_size';
@@ -55,6 +55,29 @@ export function blockInTheWay(liveBlocks, deadBlocks) {
   return liveBlocks.some(liveB =>
     deadBlocks.some(deadB => equalLocations(liveB.location, deadB.location))
   );
+}
+
+export function clearLines(blocks) {
+  const lineGroupedBlocks = map(
+    groupBy(blocks, b => b.location.y),
+    (lineBlocks, height) => ({ lineBlocks, height })
+  );
+
+  const fullLines = lineGroupedBlocks.filter(({ lineBlocks }) => lineBlocks.length === boardSize.x);
+
+  const blocksToClear = flatten(map(fullLines, 'lineBlocks'));
+
+  const remainingBlocks = difference(blocks, blocksToClear);
+
+  const droppedRemainingBlocks = remainingBlocks.map((block) => {
+    const linesBelow = fullLines.filter(({ height }) => block.location.y < height);
+    return { ...block, location: { ...block.location, y: block.location.y + linesBelow.length } };
+  });
+
+  return {
+    remaining: droppedRemainingBlocks,
+    linesCleared: fullLines.length,
+  };
 }
 
 export function rotate(liveBlocks, deadBlocks) {
