@@ -1,4 +1,4 @@
 export default {
   x: 10,
-  y: 24,
+  y: 22,
 };

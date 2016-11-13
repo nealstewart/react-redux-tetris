@@ -11,7 +11,7 @@ export function TetrisBoard(props) {
   const style = {
     width: boardSize.x * blockSize,
     height: boardSize.y * blockSize,
-    top: `${-4 * blockSize}px`,
+    top: `${-2 * blockSize}px`,
     overflow: 'none',
   };
   const wrapperStyle = {

@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { TickerContainer } from './ticker';
 import { ScoreContainer } from './score';
 import { TetrisBoardContainer } from './tetris_board';
+import { NextTetrominoContainer } from './next_tetromino';
 import { moveLeft, moveRight, tick, drop, rotate, pause, unpause } from '../actions';
 import states from '../states';
 
@@ -67,6 +68,7 @@ class GameScreen extends React.Component {
         <header>Game Screen</header>
         <ScoreContainer />
         <TetrisBoardContainer />
+        <NextTetrominoContainer />
         { this.props.state === states.PLAYING && <TickerContainer /> }
       </div>
     );
