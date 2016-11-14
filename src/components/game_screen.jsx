@@ -2,7 +2,6 @@ import * as _ from 'lodash';
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { TickerContainer } from './ticker';
-import { ScoreContainer } from './score';
 import { TetrisBoardContainer } from './tetris_board';
 import { NextTetrominoContainer } from './next_tetromino';
 import { moveLeft, moveRight, tick, drop, rotate, pause, unpause } from '../actions';
@@ -65,10 +64,30 @@ class GameScreen extends React.Component {
   render() {
     return (
       <div className={'game-screen'}>
-        <header>Game Screen</header>
-        <ScoreContainer />
-        <TetrisBoardContainer />
-        <NextTetrominoContainer />
+        <div className="left">
+          <div className="statistics" />
+        </div>
+        <div className="middle">
+          <TetrisBoardContainer />
+          { this.props.state === states.PAUSED && <div className="pause-text">PAUSED</div> }
+        </div>
+        <div className="right">
+          <NextTetrominoContainer />
+          <div className="stats">
+            <div className="score-container">
+              <div>Score</div>
+              <div>{this.props.score}</div>
+            </div>
+            <div className="line-count">
+              <div>Lines Cleared</div>
+              <div>{this.props.linesCleared}</div>
+            </div>
+            <div className="level">
+              <div>Level</div>
+              <div>{this.props.level}</div>
+            </div>
+          </div>
+        </div>
         { this.props.state === states.PLAYING && <TickerContainer /> }
       </div>
     );
@@ -84,10 +103,13 @@ GameScreen.propTypes = {
   pause: PropTypes.func.isRequired,
   unpause: PropTypes.func.isRequired,
   state: PropTypes.string.isRequired,
+  level: PropTypes.number.isRequired,
+  score: PropTypes.number.isRequired,
+  linesCleared: PropTypes.number.isRequired,
 };
 
 const GameScreenContainer = connect(
-  state => ({ state: state.state }),
+  ({ state, level, score, linesCleared }) => ({ state, level, score, linesCleared }),
   dispatch => ({
     moveLeft: () => dispatch(moveLeft()),
     moveRight: () => dispatch(moveRight()),

@@ -12,7 +12,6 @@
       }
 
       .next-tetromino {
-        float: left;
         position: relative;
         background-color: black;
       }
@@ -22,13 +21,12 @@
       }
 
       .tetris-board-wrapper {
-        float: left;
         position: relative;
         overflow: hidden;
       }
 
       .tetris-board {
-        position: absolute;
+        position: relative;
         background-color: black;
       }
 
@@ -37,7 +35,35 @@
       }
 
       .game-screen {
-        display: block;
+        display: flex;
+        flex-direction: row;
+      }
+
+      .stats {
+        margin: 20px;
+        text-align: right;
+        font-family: monospace;
+      }
+
+      .stats > div {
+        margin: 5px;
+      }
+
+      .stats > div > div:first-child {
+        font-weight: bold;
+      }
+
+      .middle {
+        position: relative;
+        display: flex;
+      }
+
+      .pause-text {
+        position: absolute;
+        top: 30%;
+        width: 100%;
+        text-align: center;
+        color: white;
       }
     </style>
   </head>

@@ -97,11 +97,7 @@ function calcPoints(level, linesCleared, newDeadBlocks, liveBlocks) {
 const levelClearAmount = 10;
 
 function calcLevel(level, linesCleared) {
-  if (linesCleared >= levelClearAmount) {
-    return level + 1;
-  }
-
-  return level;
+  return Math.floor(linesCleared / levelClearAmount);
 }
 
 function addNextBlocks(state) {
@@ -131,7 +127,7 @@ function tick(state) {
       liveBlocks: newBlocks,
       deadBlocks: remaining,
       score: state.score + points,
-      linesCleared: (state.linesCleared + linesCleared) % levelClearAmount,
+      linesCleared: state.linesCleared + linesCleared,
       level: calcLevel(state.level, linesCleared + state.linesCleared),
     });
   }

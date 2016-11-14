@@ -7,8 +7,8 @@ import blockSize from '../block_size';
 
 export function NextTetromino(props) {
   const style = {
-    width: `${2 * blockSize}px`,
-    height: `${4 * blockSize}px`,
+    width: `${4 * blockSize}px`,
+    height: `${2 * blockSize}px`,
     padding: `${1 * blockSize}px`,
     marginLeft: `${1 * blockSize}px`,
   };
