@@ -10,6 +10,7 @@ export function NextTetromino(props) {
     width: `${2 * blockSize}px`,
     height: `${4 * blockSize}px`,
     padding: `${1 * blockSize}px`,
+    marginLeft: `${1 * blockSize}px`,
   };
   const blocks = _.map(props.blocks, block => <Block key={block.key} block={block} />);
   return (
